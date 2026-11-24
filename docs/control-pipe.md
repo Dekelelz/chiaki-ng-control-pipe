@@ -88,6 +88,10 @@ Disconnect" setting is not used then: no question is shown and the console is no
 because the window may be closed by the other program and not by a person looking at it. This
 holds for every way of closing it, the stream menu's close button included.
 
+One change in this fork applies with or without the pipe: when the console answers that Remote Play
+is already in use, this program reports that at once and does not ask again. (Other failures before
+the first connection are retried as before.)
+
 ## Licence
 
 Like the rest of chiaki-ng: AGPL-3.0-only with the OpenSSL exception (`COPYING`). The code of this

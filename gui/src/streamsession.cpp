@@ -2444,7 +2444,14 @@ void StreamSession::Event(ChiakiEvent *event)
 				control->SendStream(true, 0, QString());
 			break;
 		case CHIAKI_EVENT_QUIT:
-			if(!connected && !holepunch_session && chiaki_quit_reason_is_error(event->quit.reason) && connect_timer.elapsed() < SESSION_RETRY_SECONDS * 1000)
+			// fork change: a console that answers "Remote Play is already in use" is streaming to
+			// another program. The retry below asks again a few milliseconds later for up to
+			// SESSION_RETRY_SECONDS (about 900 requests were logged in 20 s). That cannot change the
+			// answer, and it is a second program knocking on a console someone is using. So that
+			// answer is final and is reported at once.
+			if(!connected && !holepunch_session && chiaki_quit_reason_is_error(event->quit.reason)
+				&& event->quit.reason != CHIAKI_QUIT_REASON_SESSION_REQUEST_RP_IN_USE
+				&& connect_timer.elapsed() < SESSION_RETRY_SECONDS * 1000)
 			{
 				QTimer::singleShot(SESSION_RETRY_SECONDS / 3, this, &StreamSession::Start);
 				return;
