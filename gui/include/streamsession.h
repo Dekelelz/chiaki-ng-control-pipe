@@ -222,6 +222,8 @@ class StreamSession : public QObject
 		ChiakiControllerState keyboard_state;
 		ChiakiControllerState touch_state;
 		ChiakiControllerState external_state; // from the control pipe (fork addition, see controlchannel.h)
+		bool control_block_reported = false; // what the control pipe was last told about input being held back
+		void ReportInputBlock();
 		QMap<int, uint8_t> touch_tracker;
 		int8_t mouse_touch_id;
 		ChiakiControllerState dpad_touch_state;

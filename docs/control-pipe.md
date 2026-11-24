@@ -72,13 +72,15 @@ Send a STATE when something changes, and again a few times a second while nothin
 | `0x83` | RUMBLE | `u8 left, u8 right` |
 | `0x84` | TRIGGERS | `u8 type_left, u8 type_right`, 10 bytes left, 10 bytes right (adaptive-trigger effects, as the console sent them) |
 | `0x85` | HAPTICS | `u8 level`. Reserved; not sent yet. |
-| `0x86` | BLOCKED | `u8 on`. Reserved; not sent yet. |
+| `0x86` | BLOCKED | `u8 on`. 1 while this program holds all input back (its own menu is open), 0 when input passes again. |
 | `0x87` | PIN | none. The console asks for its login PIN. |
 
 ## What it does not do
 
 It does not record, replay or generate input by itself, it does not read the game, and it changes
-nothing about how the stream, registration or sign-in work. While this program's own menu is
+nothing about how the stream, registration or sign-in work. While another program is attached to the
+pipe, this program's own keyboard-as-controller and mouse-as-touchpad mapping stands aside, so input has
+one source; its menus and shortcuts work as always. While this program's own menu is
 open, input from the pipe is held back together with all other input.
 
 ## Licence

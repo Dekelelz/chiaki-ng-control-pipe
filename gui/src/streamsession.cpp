@@ -910,6 +910,9 @@ void StreamSession::HandleMousePressEvent(QMouseEvent *event)
 {
 	if(!mouse_touch_enabled)
 		return;
+	// fork addition: while a program is attached to the control pipe, it alone supplies the input
+	if(ControlChannel *control = ControlChannel::Instance(); control && control->Attached())
+		return;
 	// left button for touchpad gestures, others => touchpad click
 	if (event->button() != Qt::MouseButton::LeftButton)
 		keyboard_state.buttons |= CHIAKI_CONTROLLER_BUTTON_TOUCHPAD;
@@ -919,6 +922,9 @@ void StreamSession::HandleMousePressEvent(QMouseEvent *event)
 void StreamSession::HandleMouseReleaseEvent(QMouseEvent *event)
 {
 	if(!mouse_touch_enabled)
+		return;
+	// fork addition: while a program is attached to the control pipe, it alone supplies the input
+	if(ControlChannel *control = ControlChannel::Instance(); control && control->Attached())
 		return;
 	// left button => end of touchpad gesture
 	if (event->button() == Qt::LeftButton)
@@ -936,6 +942,9 @@ void StreamSession::HandleMouseReleaseEvent(QMouseEvent *event)
 void StreamSession::HandleMouseMoveEvent(QMouseEvent *event, qreal width, qreal height)
 {
 	if(!mouse_touch_enabled)
+		return;
+	// fork addition: while a program is attached to the control pipe, it alone supplies the input
+	if(ControlChannel *control = ControlChannel::Instance(); control && control->Attached())
 		return;
 	// left button with move => touchpad gesture, otherwise ignore
 	if (event->buttons() == Qt::LeftButton)
@@ -957,6 +966,12 @@ void StreamSession::HandleKeyboardEvent(QKeyEvent *event)
 {
 	if(!keyboard_controller_enabled)
 		return;
+	// fork addition: while a program is attached to the control pipe, it alone supplies the input
+	if(ControlChannel *control = ControlChannel::Instance(); control && control->Attached())
+	{
+		chiaki_controller_state_set_idle(&keyboard_state);
+		return;
+	}
 	if(key_map.contains(Qt::Key(event->key())) == false)
 		return;
 
@@ -1272,6 +1287,21 @@ void StreamSession::RetryHaptics(quint64 generation)
 	QTimer::singleShot(retry_delays_ms[haptics_retry_attempt++], this, [this, generation] { RetryHaptics(generation); });
 }
 
+// fork addition: tell the program on the control pipe when this program holds all input back
+// (its own menu is open) and when it lets input through again
+void StreamSession::ReportInputBlock()
+{
+	ControlChannel *control = ControlChannel::Instance();
+	if(!control)
+		return;
+	const bool blocked = input_block != 0;
+	if(blocked != control_block_reported)
+	{
+		control_block_reported = blocked;
+		control->SendBlocked(blocked);
+	}
+}
+
 // fork addition: the program on the other end of the control pipe changed what it holds
 void StreamSession::ExternalStateChanged()
 {
@@ -1337,6 +1367,7 @@ void StreamSession::DpadSendFeedbackState()
 	}
 	chiaki_controller_state_or(&state, &state, &dpad_touch_state);
 	chiaki_session_set_controller_state(&session, &state);
+	ReportInputBlock(); // control pipe (fork addition)
 }
 
 void StreamSession::SendFeedbackState()
@@ -1394,6 +1425,7 @@ void StreamSession::SendFeedbackState()
 	}
 	chiaki_controller_state_or(&state, &state, &dpad_touch_state);
 	chiaki_session_set_controller_state(&session, &state);
+	ReportInputBlock(); // control pipe (fork addition)
 }
 
 void StreamSession::InitAudio(unsigned int channels, unsigned int rate)
