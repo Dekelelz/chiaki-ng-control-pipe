@@ -88,6 +88,10 @@ Disconnect" setting is not used then: no question is shown and the console is no
 because the window may be closed by the other program and not by a person looking at it. This
 holds for every way of closing it, the stream menu's close button included.
 
+Started with `--control-pipe`, this program keeps its settings, registered consoles and logs under
+its own name, `chiaki-ng-control-pipe`, instead of chiaki-ng's. A chiaki-ng installed on the same
+computer is never read or changed, and a console has to be registered once for this program too.
+
 One change in this fork applies with or without the pipe: when the console answers that Remote Play
 is already in use, this program reports that at once and does not ask again. (Other failures before
 the first connection are retried as before.)

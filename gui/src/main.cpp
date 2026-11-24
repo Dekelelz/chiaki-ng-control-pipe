@@ -74,8 +74,18 @@ int real_main(int argc, char *argv[])
 	qRegisterMetaType<ChiakiRegistEventType>();
 	qRegisterMetaType<ChiakiLogLevel>();
 
-	QGuiApplication::setOrganizationName("Chiaki");
-	QGuiApplication::setApplicationName("Chiaki");
+	// fork addition: started with --control-pipe, this program keeps its settings, registered
+	// consoles and logs under its own name, so it never reads or changes a chiaki-ng installed on
+	// the same computer (see docs/control-pipe.md). Checked here because the names must be set
+	// before anything reads the settings, which is before the command line is parsed.
+	bool control_pipe_identity = false;
+	for(int i = 1; i < argc; i++)
+	{
+		if(qstrcmp(argv[i], "--control-pipe") == 0 || qstrncmp(argv[i], "--control-pipe=", 15) == 0)
+			control_pipe_identity = true;
+	}
+	QGuiApplication::setOrganizationName(control_pipe_identity ? "chiaki-ng-control-pipe" : "Chiaki");
+	QGuiApplication::setApplicationName(control_pipe_identity ? "chiaki-ng-control-pipe" : "Chiaki");
 	QGuiApplication::setApplicationVersion(CHIAKI_VERSION);
 	QGuiApplication::setApplicationDisplayName("chiaki-ng");
 #if defined(Q_OS_MACOS)
