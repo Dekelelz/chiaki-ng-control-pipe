@@ -221,6 +221,7 @@ class StreamSession : public QObject
 		float PS_TOUCHPAD_MAX_X, PS_TOUCHPAD_MAX_Y;
 		ChiakiControllerState keyboard_state;
 		ChiakiControllerState touch_state;
+		ChiakiControllerState external_state; // from the control pipe (fork addition, see controlchannel.h)
 		QMap<int, uint8_t> touch_tracker;
 		int8_t mouse_touch_id;
 		ChiakiControllerState dpad_touch_state;
@@ -401,6 +402,7 @@ class StreamSession : public QObject
 		void FecFailure();
 
 	private slots:
+		void ExternalStateChanged(); // control pipe (fork addition)
 		void UpdateGamepads();
 		void DpadSendFeedbackState();
 		void SendFeedbackState();

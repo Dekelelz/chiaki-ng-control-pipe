@@ -3,6 +3,7 @@
 #include <streamsession.h>
 #include <settings.h>
 #include <controllermanager.h>
+#include <controlchannel.h>
 
 #include <chiaki/base64.h>
 #include <chiaki/streamconnection.h>
@@ -514,6 +515,13 @@ StreamSession::StreamSession(const StreamSessionConnectInfo &connect_info, QObje
 
 	chiaki_controller_state_set_idle(&keyboard_state);
 	chiaki_controller_state_set_idle(&touch_state);
+	// fork addition: controller state from the control pipe, when the program was started with --control-pipe
+	chiaki_controller_state_set_idle(&external_state);
+	if(ControlChannel *control = ControlChannel::Instance())
+	{
+		external_state = control->State();
+		connect(control, &ControlChannel::StateChanged, this, &StreamSession::ExternalStateChanged, Qt::QueuedConnection);
+	}
 	touch_tracker=QMap<int, uint8_t>();
 	mouse_touch_id=-1;
 	dpad_touch_id =-1;
@@ -1264,6 +1272,16 @@ void StreamSession::RetryHaptics(quint64 generation)
 	QTimer::singleShot(retry_delays_ms[haptics_retry_attempt++], this, [this, generation] { RetryHaptics(generation); });
 }
 
+// fork addition: the program on the other end of the control pipe changed what it holds
+void StreamSession::ExternalStateChanged()
+{
+	ControlChannel *control = ControlChannel::Instance();
+	if(!control)
+		return;
+	external_state = control->State();
+	SendFeedbackState();
+}
+
 void StreamSession::DpadSendFeedbackState()
 {
 	ChiakiControllerState state;
@@ -1284,6 +1302,7 @@ void StreamSession::DpadSendFeedbackState()
 	chiaki_controller_state_or(&state, &state, &sdeck_state);
 #endif
 	chiaki_controller_state_or(&state, &state, &keyboard_state);
+	chiaki_controller_state_or(&state, &state, &external_state); // control pipe (fork addition)
 	chiaki_controller_state_or(&state, &state, &touch_state);
 
 	if(input_block)
@@ -1340,6 +1359,7 @@ void StreamSession::SendFeedbackState()
 	chiaki_controller_state_or(&state, &state, &sdeck_state);
 #endif
 	chiaki_controller_state_or(&state, &state, &keyboard_state);
+	chiaki_controller_state_or(&state, &state, &external_state); // control pipe (fork addition)
 	chiaki_controller_state_or(&state, &state, &touch_state);
 
 	if(input_block)
@@ -2388,6 +2408,8 @@ void StreamSession::Event(ChiakiEvent *event)
 			connect_timer.invalidate();
 			connected = true;
 			emit ConnectedChanged();
+			if(ControlChannel *control = ControlChannel::Instance())
+				control->SendStream(true, 0, QString());
 			break;
 		case CHIAKI_EVENT_QUIT:
 			if(!connected && !holepunch_session && chiaki_quit_reason_is_error(event->quit.reason) && connect_timer.elapsed() < SESSION_RETRY_SECONDS * 1000)
@@ -2398,12 +2420,16 @@ void StreamSession::Event(ChiakiEvent *event)
 			connected = false;
 			emit ConnectedChanged();
 			emit SessionQuit(event->quit.reason, event->quit.reason_str ? QString::fromUtf8(event->quit.reason_str) : QString());
+			if(ControlChannel *control = ControlChannel::Instance())
+				control->SendStream(false, (uint8_t)event->quit.reason, event->quit.reason_str ? QString::fromUtf8(event->quit.reason_str) : QString());
 			break;
 		case CHIAKI_EVENT_REGIST:
 			emit AutoRegistSucceeded(event->host);
 			break;
 		case CHIAKI_EVENT_LOGIN_PIN_REQUEST:
 			emit LoginPINRequested(event->login_pin_request.pin_incorrect);
+			if(ControlChannel *control = ControlChannel::Instance())
+				control->SendPinRequest();
 			break;
 		case CHIAKI_EVENT_HOLEPUNCH:
 			emit DataHolepunchProgress(event->data_holepunch.finished);
@@ -2412,6 +2438,8 @@ void StreamSession::Event(ChiakiEvent *event)
 			emit NicknameReceived(event->server_nickname);
 			break;
 		case CHIAKI_EVENT_RUMBLE: {
+			if(ControlChannel *control = ControlChannel::Instance())
+				control->SendRumble(event->rumble.left, event->rumble.right);
 			if(ps5_rumble_intensity < 0)
 				return;
 			uint8_t left = event->rumble.left;
@@ -2547,6 +2575,8 @@ void StreamSession::Event(ChiakiEvent *event)
 			break;
 		}
 		case CHIAKI_EVENT_TRIGGER_EFFECTS: {
+			if(ControlChannel *control = ControlChannel::Instance())
+				control->SendTriggers(event->trigger_effects.type_left, event->trigger_effects.left, event->trigger_effects.type_right, event->trigger_effects.right);
 			if(ps5_trigger_intensity < 0)
 				return;
 			uint8_t type_left = event->trigger_effects.type_left;

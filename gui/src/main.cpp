@@ -13,6 +13,7 @@
 int real_main(int argc, char *argv[]);
 int main(int argc, char *argv[]) { return real_main(argc, argv); }
 
+#include <controlchannel.h>
 #include <streamsession.h>
 #include <settings.h>
 #include <host.h>
@@ -192,11 +193,21 @@ int real_main(int argc, char *argv[])
 	QCommandLineOption passcode_option("passcode", "Automatically send your PlayStation login passcode (only affects users with a login passcode set on their PlayStation console).", "passcode");
 	parser.addOption(passcode_option);
 
+	// fork addition, see controlchannel.h and docs/control-pipe.md
+	QCommandLineOption control_pipe_option("control-pipe", "Take controller input from the named pipe <name>, created by another program on this PC (not part of upstream chiaki-ng; see docs/control-pipe.md).", "name");
+	parser.addOption(control_pipe_option);
+
 	QCommandLineOption opengl_option("opengl", "Switch the renderer to OpenGL from now on, for systems where Vulkan shows a blank window or crashes (switch back under Settings > Video > Renderer Backend).");
 	parser.addOption(opengl_option);
 
 	parser.process(app);
 	QStringList args = parser.positionalArguments();
+
+	if(parser.isSet(control_pipe_option) && !ControlChannel::Create(parser.value(control_pipe_option)))
+	{
+		printf("--control-pipe needs a name of 1 to 128 letters, digits, '_' or '-', and works on Windows only.\n");
+		return 1;
+	}
 
 	Settings settings(parser.isSet(profile_option) ? parser.value(profile_option) : QString());
 	bool exit_app_on_stream_exit = parser.isSet(stream_exit_option);

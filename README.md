@@ -1,3 +1,10 @@
+> **This is a modified copy of chiaki-ng, not the official one.**
+> It was changed on 24 November 2026: an optional `--control-pipe` start option was added, which lets
+> another program on the same PC act as one more controller ([docs/control-pipe.md](docs/control-pipe.md)).
+> Everything else is chiaki-ng as of its commit `43728af` (3 November 2026). The official project, its
+> downloads and its support are at <https://github.com/chiaki-ng/chiaki-ng>. Please don't report problems
+> with this copy there. Same licence as chiaki-ng: AGPL-3.0-only with the OpenSSL exception.
+
 
 ![chiaki-ng Logo](gui/res/chiaking-logo.svg)
 
