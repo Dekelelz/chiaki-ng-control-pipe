@@ -83,6 +83,11 @@ pipe, this program's own keyboard-as-controller and mouse-as-touchpad mapping st
 one source; its menus and shortcuts work as always. While this program's own menu is
 open, input from the pipe is held back together with all other input.
 
+Closing the window while it was started with `--control-pipe` only ends the stream. The "Action on
+Disconnect" setting is not used then: no question is shown and the console is not put to sleep,
+because the window may be closed by the other program and not by a person looking at it. This
+holds for every way of closing it, the stream menu's close button included.
+
 ## Licence
 
 Like the rest of chiaki-ng: AGPL-3.0-only with the OpenSSL exception (`COPYING`). The code of this

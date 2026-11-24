@@ -2,6 +2,7 @@
 #include "qmlsettings.h"
 #include "qmlmainwindow.h"
 #include "streamsession.h"
+#include <controlchannel.h> // fork addition, see docs/control-pipe.md
 #include "controllermanager.h"
 #include "psnaccountid.h"
 #include "psntoken.h"
@@ -1260,7 +1261,13 @@ bool QmlBackend::closeRequested()
 
     bool stop = true;
     if (session->IsConnected()) {
-        switch (settings->GetDisconnectAction()) {
+        // fork addition: when this program was started with a control pipe, the program on the
+        // other end closes this window on the player's behalf. Closing then only ends the stream:
+        // no question is left on screen and the console is never put to sleep by it.
+        const DisconnectAction action = ControlChannel::Instance()
+            ? DisconnectAction::AlwaysNothing
+            : settings->GetDisconnectAction();
+        switch (action) {
         case DisconnectAction::Ask:
             stop = false;
             emit sessionStopDialogRequested();
