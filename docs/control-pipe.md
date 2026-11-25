@@ -83,10 +83,16 @@ pipe, this program's own keyboard-as-controller and mouse-as-touchpad mapping st
 one source; its menus and shortcuts work as always. While this program's own menu is
 open, input from the pipe is held back together with all other input.
 
-Closing the window while it was started with `--control-pipe` only ends the stream. The "Action on
+Closing the window during a stream while it was started with `--control-pipe` ends the stream
+properly and then the program itself, instead of going back to the console list. The "Action on
 Disconnect" setting is not used then: no question is shown and the console is not put to sleep,
 because the window may be closed by the other program and not by a person looking at it. This
-holds for every way of closing it, the stream menu's close button included.
+holds for every way of closing it, the stream menu's close button included. A stream that ends any
+other way (the console went to rest mode, the network dropped) still goes back to the console list.
+
+Started with `--control-pipe`, the log describes the first picture of each stream once
+("Control pipe: first picture ..."): its size, pixel format, colour range, colour space, primaries
+and transfer, as the decoder reported them. Nothing is sent anywhere.
 
 Started with `--control-pipe`, this program keeps its settings, registered consoles and logs under
 its own name, `chiaki-ng-control-pipe`, instead of chiaki-ng's. A chiaki-ng installed on the same
@@ -100,5 +106,6 @@ the first connection are retried as before.)
 
 Like the rest of chiaki-ng: AGPL-3.0-only with the OpenSSL exception (`COPYING`). The code of this
 addition is in `gui/include/controlchannel.h` and `gui/src/controlchannel.cpp`, with small hooks
-in `gui/src/main.cpp`, `gui/src/streamsession.cpp` and `gui/include/streamsession.h`, each marked
+in `gui/src/main.cpp`, `gui/src/streamsession.cpp`, `gui/include/streamsession.h`,
+`gui/src/qmlbackend.cpp` and `gui/include/qmlbackend.h`, each marked
 "fork addition".

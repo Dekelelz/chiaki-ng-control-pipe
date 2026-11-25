@@ -33,6 +33,7 @@
 #include <QDesktopServices>
 #include <QtConcurrent>
 #include <QTimer>
+#include <memory> // fork addition
 
 extern "C" {
 #include <chiaki/time.h>
@@ -1121,7 +1122,9 @@ void QmlBackend::createSession(const StreamSessionConnectInfo &connect_info)
         return;
     }
 
-    connect(session, &StreamSession::FfmpegFrameAvailable, frame_thread->parent(), [this, use_opengl_renderer]() {
+    // fork addition: with a control pipe, the first picture of each stream is described once in the log
+    auto colours_logged = std::make_shared<QAtomicInt>(ControlChannel::Instance() ? 0 : 1);
+    connect(session, &StreamSession::FfmpegFrameAvailable, frame_thread->parent(), [this, use_opengl_renderer, colours_logged]() {
         ChiakiFfmpegDecoder *decoder = session->GetFfmpegDecoder();
         if (!decoder) {
             qCCritical(chiakiGui) << "Session has no FFmpeg decoder";
@@ -1131,6 +1134,18 @@ void QmlBackend::createSession(const StreamSessionConnectInfo &connect_info)
         ChiakiFfmpegFrame frame = chiaki_ffmpeg_decoder_pull_frame(decoder, &frames_lost);
         if (!frame.frame)
             return;
+        if (colours_logged->testAndSetRelaxed(0, 1)) {
+            const AVFrame *f = frame.frame;
+            const char *fmt = av_get_pix_fmt_name(static_cast<AVPixelFormat>(f->format));
+            const char *range = av_color_range_name(f->color_range);
+            const char *space = av_color_space_name(f->colorspace);
+            const char *prim = av_color_primaries_name(f->color_primaries);
+            const char *trc = av_color_transfer_name(f->color_trc);
+            qCInfo(chiakiGui).nospace() << "Control pipe: first picture " << f->width << "x" << f->height
+                << " format=" << (fmt ? fmt : "?") << " range=" << (range ? range : "?")
+                << " space=" << (space ? space : "?") << " primaries=" << (prim ? prim : "?")
+                << " transfer=" << (trc ? trc : "?") << " hw=" << (f->hw_frames_ctx ? "yes" : "no");
+        }
         logDecoderDeliveryStats(static_cast<qint64>(chiaki_time_now_monotonic_us()), frames_lost, frame.recovered);
         logDecoderFramePtsStats(static_cast<qint64>(chiaki_time_now_monotonic_us()), frame.pts, frame.duration);
         if (frame.recovered)
@@ -1280,8 +1295,16 @@ bool QmlBackend::closeRequested()
         }
     }
 
-    if (stop)
+    if (stop) {
+        // fork addition: with a control pipe, closing the window means the player is done. Once the
+        // stream has ended properly the program leaves too, instead of staying open on its console
+        // list where nobody is looking (the program on the other end starts it again when needed).
+        if (ControlChannel::Instance() && quit_after_session != session) {
+            quit_after_session = session;
+            connect(session, &StreamSession::SessionQuit, qGuiApp, &QGuiApplication::quit);
+        }
         session->Stop();
+    }
 
     return false;
 }

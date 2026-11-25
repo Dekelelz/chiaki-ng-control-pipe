@@ -15,6 +15,7 @@
 #include <QFutureWatcher>
 #include <QFuture>
 #include <QAtomicInteger>
+#include <QPointer> // fork addition
 #ifdef CHIAKI_HAVE_WEBENGINE
 #include <QQuickWebEngineProfile>
 #include <QWebEngineUrlRequestInterceptor>
@@ -330,6 +331,7 @@ private:
     bool controller_mapping_in_progress = false;
     bool enable_analog_stick_mapping = false;
     bool resume_session = false;
+    QPointer<StreamSession> quit_after_session; // fork addition, see docs/control-pipe.md
     bool settings_allocd = false;
     HostMAC auto_connect_mac = {};
     QString auto_connect_nickname = "";
