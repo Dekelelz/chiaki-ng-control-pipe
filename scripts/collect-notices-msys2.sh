@@ -24,6 +24,11 @@ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 mkdir -p "$pkg_dir/licenses" "$sources_dir"
 cp "$repo_root/COPYING" "$pkg_dir/COPYING"
 cp -r "$repo_root/LICENSES" "$pkg_dir/LICENSES"
+# the full GPL and LGPL texts the libraries here are under (FFmpeg's source carries all four)
+ffmpeg_src="${FFMPEG_WORK_DIR:-$repo_root/ffmpeg-src}"
+for t in COPYING.GPLv2 COPYING.GPLv3 COPYING.LGPLv2.1 COPYING.LGPLv3; do
+    cp "$ffmpeg_src/$t" "$pkg_dir/LICENSES/$t.txt"
+done
 cat > "$pkg_dir/MODIFIED-VERSION.txt" <<EOF
 This is a modified version of chiaki-ng, not the official chiaki-ng.
 
@@ -150,6 +155,16 @@ git -C "$repo_root" archive --format=tar.gz --prefix="chiaki-ng-control-pipe/" H
     for rel in $(printf '%s\n' "${!built_here[@]}" | sort); do echo "    $rel"; done
 } >> "$notices"
 
+# the exact package versions this build used, and the build recipe itself
+pacman -Q > "$sources_dir/msys2-packages-installed.txt"
+cp "$repo_root/.github/workflows/build-msys2.yml" "$sources_dir/build-recipe-build-msys2.yml"
+# GitHub refuses files over 100 MB in a repository: split big ones (join with: cat name.part-* > name)
+for f in "$sources_dir"/*; do
+    if [[ -f "$f" && $(stat -c %s "$f") -gt 95000000 ]]; then
+        split -b 90m -d "$f" "$f.part-"
+        rm "$f"
+    fi
+done
 ( cd "$sources_dir" && sha256sum * > SHA256SUMS.txt )
 echo "notices written; sources gathered:"
 ls -la "$sources_dir"
