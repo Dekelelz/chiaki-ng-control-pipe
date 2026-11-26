@@ -13,8 +13,9 @@
 #   scripts/collect-notices-msys2.sh <package-dir> <sources-dir> <source-url> <sources-url>
 set -euo pipefail
 
-pkg_dir="$1"
-sources_dir="$2"
+# Windows paths (D:\...) as Unix ones: tar would read "D:" as a remote host
+pkg_dir="$(cygpath -u "$1" 2>/dev/null || echo "$1")"
+sources_dir="$(cygpath -u "$2" 2>/dev/null || echo "$2")"
 source_url="$3"        # this program's own source, exactly this build
 sources_url="$4"       # where <sources-dir> will be published
 prefix="${MINGW_PREFIX:-/mingw64}"
@@ -123,7 +124,7 @@ add_built ffmpeg "$(cat "$sources_dir"/ffmpeg-*.txt 2>/dev/null | head -1)" "LGP
 pl_dir="$repo_root/libplacebo"
 pl_commit="$(git -C "$pl_dir" rev-parse HEAD)"
 add_built libplacebo "commit $pl_commit" "LGPL-2.1-or-later" "$pl_dir/LICENSE"
-tar --exclude=.git --exclude=build -czf "$sources_dir/libplacebo-$pl_commit.tar.gz" -C "$repo_root" libplacebo
+tar --force-local --exclude=.git --exclude=build -czf "$sources_dir/libplacebo-$pl_commit.tar.gz" -C "$repo_root" libplacebo
 for d in "$repo_root"/SDL3-*/; do
     [[ -d "$d" ]] && add_built "SDL3" "$(basename "$d")" "Zlib" "$d/LICENSE.txt"
 done
@@ -138,13 +139,13 @@ for d in "$repo_root"/third-party/*/; do
     for f in "$d"LICENSE* "$d"COPYING* "$d"license* ; do [[ -f "$f" ]] && lic_files+=("$f"); done
     sub_commit="$(git -C "$d" rev-parse HEAD 2>/dev/null || echo unknown)"
     add_built "$n" "commit $sub_commit" "see licenses/$n" "${lic_files[@]}"
-    tar --exclude=.git -czf "$sources_dir/third-party-$n-$sub_commit.tar.gz" -C "$repo_root/third-party" "$n"
+    tar --force-local --exclude=.git -czf "$sources_dir/third-party-$n-$sub_commit.tar.gz" -C "$repo_root/third-party" "$n"
 done
 for f in "$repo_root"/SDL3-*.tar.gz "$repo_root"/sdl2-compat-*.tar.gz; do
     [[ -f "$f" ]] && cp "$f" "$sources_dir/"
 done
 if [[ -d "$repo_root/hidapi" ]]; then
-    tar --exclude=.git --exclude=build -czf "$sources_dir/hidapi-$(git -C "$repo_root/hidapi" rev-parse HEAD).tar.gz" -C "$repo_root" hidapi
+    tar --force-local --exclude=.git --exclude=build -czf "$sources_dir/hidapi-$(git -C "$repo_root/hidapi" rev-parse HEAD).tar.gz" -C "$repo_root" hidapi
 fi
 # this program's own source, exactly this build (also on its repository page)
 git -C "$repo_root" archive --format=tar.gz --prefix="chiaki-ng-control-pipe/" HEAD > "$sources_dir/chiaki-ng-control-pipe-$(git -C "$repo_root" rev-parse --short=7 HEAD).tar.gz"
