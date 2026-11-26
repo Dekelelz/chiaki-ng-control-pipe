@@ -72,7 +72,7 @@ Send a STATE when something changes, and again a few times a second while nothin
 | `0x83` | RUMBLE | `u8 left, u8 right` |
 | `0x84` | TRIGGERS | `u8 type_left, u8 type_right`, 10 bytes left, 10 bytes right (adaptive-trigger effects, as the console sent them) |
 | `0x85` | HAPTICS | `u8 level`. Reserved; not sent yet. |
-| `0x86` | BLOCKED | `u8 on`. 1 while this program holds all input back (its own menu is open), 0 when input passes again. |
+| `0x86` | BLOCKED | `u8 on`. 1 while this program holds all input back (its own menu is open), 0 when input passes again. Also sent once right after each STREAM with on = 1, with the state at that moment. |
 | `0x87` | PIN | none. The console asks for its login PIN. |
 
 ## What it does not do

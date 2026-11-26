@@ -2441,7 +2441,20 @@ void StreamSession::Event(ChiakiEvent *event)
 			connected = true;
 			emit ConnectedChanged();
 			if(ControlChannel *control = ControlChannel::Instance())
+			{
 				control->SendStream(true, 0, QString());
+				// fork addition: a stream start means "input free" to the other program, so say
+				// at once if this program's own menu already holds input (opened while connecting).
+				// On the GUI thread, where input_block and the last report live; it comes after the
+				// stream start above.
+				QMetaObject::invokeMethod(this, [this]() {
+					if(ControlChannel *c = ControlChannel::Instance())
+					{
+						control_block_reported = input_block != 0;
+						c->SendBlocked(control_block_reported);
+					}
+				});
+			}
 			break;
 		case CHIAKI_EVENT_QUIT:
 			// fork change: a console that answers "Remote Play is already in use" is streaming to

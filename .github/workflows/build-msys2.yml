@@ -77,13 +77,9 @@ jobs:
         env:
           LIBPLACEBO_VERSION: ${{ github.event.inputs.libplacebo_version }}
 
-      - name: Setup ffmpeg
+      - name: Build a small LGPL FFmpeg from its own source
         run: |
-          curl -LO https://github.com/streetpea/FFmpeg-Builds/releases/download/latest/ffmpeg-n9.0-latest-win64-gpl-shared-9.0.zip
-          unzip ffmpeg-n9.0-latest-win64-gpl-shared-9.0.zip
-          cp -a "ffmpeg-n9.0-latest-win64-gpl-shared-9.0/bin/." /mingw64/bin
-          cp -a "ffmpeg-n9.0-latest-win64-gpl-shared-9.0/include/." /mingw64/include
-          cp -a "ffmpeg-n9.0-latest-win64-gpl-shared-9.0/lib/." /mingw64/lib
+          SOURCES_DIR="${{ github.workspace }}/corresponding-source" INSTALL_PREFIX=/mingw64 scripts/build-ffmpeg-lgpl-windows.sh
 
       - name: Build sdl2-compat
         run: |
@@ -103,6 +99,13 @@ jobs:
         run: |
           ./scripts/deploy-windows-msys2.sh chiaki-ng-Win build/gui/chiaki.exe "${{ github.workspace }}/build/third-party/cpp-steam-tools" /mingw64 gui/src/qml
 
+      - name: Licences, notices and library sources
+        run: |
+          SHORT="$(echo "${{ github.sha }}" | cut -c1-7)"
+          scripts/collect-notices-msys2.sh chiaki-ng-Win "${{ github.workspace }}/corresponding-source" \
+            "${{ github.server_url }}/${{ github.repository }}/tree/${{ github.sha }}" \
+            "${{ github.server_url }}/${{ github.repository }}/tree/sources-$SHORT"
+
       - name: Package chiaki-ng
         run: |
           CHIAKI_VERSION_MAJOR="$(grep 'CHIAKI_VERSION_MAJOR' CMakeLists.txt | grep -Eo '[0-9]+')"
@@ -120,17 +123,11 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
-      - name: Compile .ISS to .EXE Installer
-        uses: Minionguyjpro/Inno-Setup-Action@v1.2.9
-        with:
-          path: "scripts/chiaki-ng.iss"
-          options: /O+
-
-      - name: Upload chiaki-ng Artifact
+      - name: Upload the library sources
         uses: actions/upload-artifact@v7
         with:
-          name: chiaki-ng-win_x64-MSYS2-Release-installer.exe
-          path: chiaki-ng-windows-installer.exe
+          name: corresponding-source
+          path: corresponding-source
           if-no-files-found: error
-          retention-days: 7
+          retention-days: 30
           

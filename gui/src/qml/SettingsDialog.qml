@@ -3139,6 +3139,12 @@ DialogView {
                     text: "<h1>chiaki-ng</h1> by Street Pea, version %1
                         <h2>Fork of Chiaki</h2> by Florian Markl at version 2.1.1
 
+                        <p><b>Modified version</b> (chiaki-ng-control-pipe, November 2026): adds the
+                        --control-pipe option, controller input from another program on the same PC.
+                        Not the official chiaki-ng. Where its exact source is: MODIFIED-VERSION.txt
+                        next to this program. This program uses Qt under the GNU LGPL version 3; the
+                        other libraries it uses and their licences: THIRD-PARTY-NOTICES.txt.</p>
+
                         <p>This program is free software: you can redistribute it and/or modify
                         it under the terms of the GNU Affero General Public License version 3
                         as published by the Free Software Foundation.</p>
