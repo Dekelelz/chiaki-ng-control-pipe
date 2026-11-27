@@ -9,6 +9,9 @@ Item {
     id: root
     property list<Item> restoreFocusItems
     property bool initialAsk: false
+    // fork addition (control pipe): the one PS5 found was opened by itself once in this run. Kept here,
+    // not on the console list, which is rebuilt after every stream: never a second wake by itself.
+    property bool controlPipeOpened: false
     readonly property bool preferSeparateStreamSettingsWindows: Chiaki.window.runtimeRendererBackend === 1 && Chiaki.session
     property bool useSeparateStreamSettingsWindows: false
     Material.theme: Material.Dark

@@ -11,9 +11,9 @@ Pane {
     // fork addition: started by another program (--control-pipe), one click there means play. Once per
     // run, when exactly one PS5 is found on this network, it is opened as a double-click would: connect
     // (waking it from rest mode) or, if it isn't linked yet, start linking. Two or more: the player picks.
-    property bool controlPipeOpened: false
+    // Once per run (root.controlPipeOpened): after a stream, a failed wake or a cancel, the player picks.
     function controlPipeOpen() {
-        if(controlPipeOpened || !Chiaki.controlPipe || Chiaki.autoConnect || Chiaki.window.directStream)
+        if(root.controlPipeOpened || !Chiaki.controlPipe || Chiaki.autoConnect || Chiaki.window.directStream)
             return;
         if(consolePane.StackView.status !== StackView.Active)
             return;
@@ -28,7 +28,7 @@ Pane {
         }
         if(count !== 1)
             return;
-        controlPipeOpened = true;
+        root.controlPipeOpened = true;
         console.log("Control pipe: opening the one PS5 found, " + Chiaki.hosts[found].state);
         Chiaki.connectToHost(found, Chiaki.hosts[found].name);
     }

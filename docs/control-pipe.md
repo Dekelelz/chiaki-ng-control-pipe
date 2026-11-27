@@ -103,7 +103,9 @@ program already meant "play": when no PSN sign-in is saved, the PSN sign-in open
 of the "Would you like to connect to PSN?" question (the Steam shortcut question isn't shown), and once
 per run, when exactly one PS5 is found on this network (awake or in rest mode), it is opened as a
 double-click would open it: connected, woken from rest mode first, or linked if it isn't yet. With two
-or more, the player picks one as before. The log says "Control pipe: opening the one PS5 found".
+or more, the player picks one as before. The log says "Control pipe: opening the one PS5 found". It
+happens once per run only: after a stream ends, a wake that failed or a cancelled wait, the player picks, so
+a PS5 put to rest from its own menu is never woken again by itself.
 
 One change in this fork applies with or without the pipe: when the console answers that Remote Play
 is already in use, this program reports that at once and does not ask again. (Other failures before
