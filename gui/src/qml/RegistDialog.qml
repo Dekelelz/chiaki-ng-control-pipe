@@ -23,7 +23,11 @@ DialogView {
             if (!done)
                 logArea.text += msg + "\n";
             else
+            {
                 logDialog.standardButtons = Dialog.Close;
+                if (ok)
+                    root.controlPipeLinked();     // fork addition: open the freshly linked PS5 once more
+            }
         });
         if (registerOk) {
             logArea.text = "";

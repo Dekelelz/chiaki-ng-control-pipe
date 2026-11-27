@@ -12,6 +12,16 @@ Item {
     // fork addition (control pipe): the one PS5 found was opened by itself once in this run. Kept here,
     // not on the console list, which is rebuilt after every stream: never a second wake by itself.
     property bool controlPipeOpened: false
+    // fork addition (control pipe): the first open of a new buyer links the PS5 instead of playing; when the
+    // link is made in this run, the freshly linked PS5 is opened once more by itself (only once).
+    property bool controlPipeRelinked: false
+    function controlPipeLinked() {
+        if(Chiaki.controlPipe && !controlPipeRelinked)
+        {
+            controlPipeRelinked = true;
+            controlPipeOpened = false;
+        }
+    }
     readonly property bool preferSeparateStreamSettingsWindows: Chiaki.window.runtimeRendererBackend === 1 && Chiaki.session
     property bool useSeparateStreamSettingsWindows: false
     Material.theme: Material.Dark

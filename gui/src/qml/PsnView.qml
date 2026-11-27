@@ -189,6 +189,7 @@ Rectangle {
                     break
                 case Chiaki.PsnConnectState.RegistrationFinished:
                     infoLabel.text = qsTr("Successfully registered console")
+                    root.controlPipeLinked()     // fork addition: open the freshly linked PS5 once more
                     failTimer.restart()
                     break
                 case Chiaki.PsnConnectState.DataConnectionStart:

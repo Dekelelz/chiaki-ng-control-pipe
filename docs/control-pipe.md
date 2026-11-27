@@ -106,6 +106,8 @@ double-click would open it: connected, woken from rest mode first, or linked if 
 or more, the player picks one as before. The log says "Control pipe: opening the one PS5 found". It
 happens once per run only: after a stream ends, a wake that failed or a cancelled wait, the player picks, so
 a PS5 put to rest from its own menu is never woken again by itself.
+The one exception: when the first open had to link the PS5 (by PSN or with the PIN), the freshly
+linked PS5 is opened once more right after, so a new buyer goes from sign-in to the game without a double-click.
 
 One change in this fork applies with or without the pipe: when the console answers that Remote Play
 is already in use, this program reports that at once and does not ask again. (Other failures before
