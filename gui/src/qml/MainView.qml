@@ -8,12 +8,47 @@ import org.streetpea.chiaking
 Pane {
     padding: 0
     id: consolePane
+    // fork addition: started by another program (--control-pipe), one click there means play. Once per
+    // run, when exactly one PS5 is found on this network, it is opened as a double-click would: connect
+    // (waking it from rest mode) or, if it isn't linked yet, start linking. Two or more: the player picks.
+    property bool controlPipeOpened: false
+    function controlPipeOpen() {
+        if(controlPipeOpened || !Chiaki.controlPipe || Chiaki.autoConnect || Chiaki.window.directStream)
+            return;
+        if(consolePane.StackView.status !== StackView.Active)
+            return;
+        var found = -1, count = 0;
+        for(var i = 0; i < Chiaki.hosts.length; i++)
+        {
+            var h = Chiaki.hosts[i];
+            if(!h.display || !h.discovered || !h.ps5 || (h.state !== "ready" && h.state !== "standby"))
+                continue;
+            count++;
+            found = i;
+        }
+        if(count !== 1)
+            return;
+        controlPipeOpened = true;
+        console.log("Control pipe: opening the one PS5 found, " + Chiaki.hosts[found].state);
+        Chiaki.connectToHost(found, Chiaki.hosts[found].name);
+    }
+    Connections {
+        target: Chiaki
+        function onHostsChanged() { consolePane.controlPipeOpen(); }
+    }
     StackView.onActivated: {
         forceActiveFocus(Qt.TabFocusReason);
         if(!Chiaki.autoConnect && !root.initialAsk && !Chiaki.window.directStream)
         {
             root.initialAsk = true;
-            if(Chiaki.settings.addSteamShortcutAsk && (typeof Chiaki.createSteamShortcut === "function"))
+            // fork addition: started by another program (--control-pipe), the PSN sign-in opens without the
+            // question (it finds and links the PS5), and the Steam question doesn't apply
+            if(Chiaki.controlPipe)
+            {
+                if(!Chiaki.settings.psnRefreshToken || !Chiaki.settings.psnAuthToken || !Chiaki.settings.psnAuthTokenExpiry || !Chiaki.settings.psnAccountId)
+                    root.showPSNTokenDialog(false);
+            }
+            else if(Chiaki.settings.addSteamShortcutAsk && (typeof Chiaki.createSteamShortcut === "function"))
                 root.showRemindDialog(qsTr("Official Steam artwork + controller layout"), qsTr("Would you like to either create a new non-Steam game for chiaki-ng\nor update an existing non-Steam game with the official artwork and controller layout?") + "\n\n" + qsTr("(Note: If you select no now and want to do this later, click the button or press R3 from the main menu.)"), false, () => root.showSteamShortcutDialog(true));
             else if(Chiaki.settings.remotePlayAsk)
             {
@@ -23,6 +58,7 @@ Pane {
                     Chiaki.settings.remotePlayAsk = false;
             }
         }
+        controlPipeOpen();     // fork addition: after any sign-in question above
     }
     Keys.onUpPressed: {
         if(hostsView.currentItem && hostsView.currentItem.visible)

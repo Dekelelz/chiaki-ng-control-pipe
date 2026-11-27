@@ -87,6 +87,8 @@ class QmlBackend : public QObject
     Q_PROPERTY(QVariantList hosts READ hosts NOTIFY hostsChanged)
     Q_PROPERTY(QVariantList hiddenHosts READ hiddenHosts NOTIFY hiddenHostsChanged)
     Q_PROPERTY(bool autoConnect READ autoConnect NOTIFY autoConnectChanged)
+    // fork addition: true when another program started this one with --control-pipe (docs/control-pipe.md)
+    Q_PROPERTY(bool controlPipe READ controlPipe CONSTANT)
     Q_PROPERTY(PsnConnectState connectState READ connectState WRITE setConnectState NOTIFY connectStateChanged)
     Q_PROPERTY(QVariantList currentControllerMapping READ currentControllerMapping NOTIFY currentControllerMappingChanged)
     Q_PROPERTY(QString currentControllerType READ currentControllerType NOTIFY currentControllerTypeChanged)
@@ -153,6 +155,7 @@ public:
     void finishAutoRegister(const ChiakiRegisteredHost &host);
 
     bool autoConnect() const;
+    bool controlPipe() const;
 
     void psnConnector();
 

@@ -98,6 +98,13 @@ Started with `--control-pipe`, this program keeps its settings, registered conso
 its own name, `chiaki-ng-control-pipe`, instead of chiaki-ng's. A chiaki-ng installed on the same
 computer is never read or changed, and a console has to be registered once for this program too.
 
+Started with `--control-pipe`, the console list asks fewer questions, because one click in the other
+program already meant "play": when no PSN sign-in is saved, the PSN sign-in opens straight away instead
+of the "Would you like to connect to PSN?" question (the Steam shortcut question isn't shown), and once
+per run, when exactly one PS5 is found on this network (awake or in rest mode), it is opened as a
+double-click would open it: connected, woken from rest mode first, or linked if it isn't yet. With two
+or more, the player picks one as before. The log says "Control pipe: opening the one PS5 found".
+
 One change in this fork applies with or without the pipe: when the console answers that Remote Play
 is already in use, this program reports that at once and does not ask again. (Other failures before
 the first connection are retried as before.)
@@ -107,5 +114,5 @@ the first connection are retried as before.)
 Like the rest of chiaki-ng: AGPL-3.0-only with the OpenSSL exception (`COPYING`). The code of this
 addition is in `gui/include/controlchannel.h` and `gui/src/controlchannel.cpp`, with small hooks
 in `gui/src/main.cpp`, `gui/src/streamsession.cpp`, `gui/include/streamsession.h`,
-`gui/src/qmlbackend.cpp` and `gui/include/qmlbackend.h`, each marked
+`gui/src/qmlbackend.cpp`, `gui/include/qmlbackend.h` and `gui/src/qml/MainView.qml`, each marked
 "fork addition".

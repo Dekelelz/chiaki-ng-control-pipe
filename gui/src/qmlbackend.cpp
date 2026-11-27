@@ -893,6 +893,12 @@ bool QmlBackend::autoConnect() const
     return auto_connect_mac.GetValue();
 }
 
+// fork addition, see docs/control-pipe.md
+bool QmlBackend::controlPipe() const
+{
+    return ControlChannel::Instance() != nullptr;
+}
+
 void QmlBackend::psnCancel(bool stop_thread)
 {
     session->CancelPsnConnection(stop_thread);
